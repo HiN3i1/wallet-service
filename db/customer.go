@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/go-pg/pg/orm"
+	"github.com/go-pg/pg/v10/orm"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -37,7 +37,7 @@ func CreateCustomerWallet(customerID string, address string, wallet *Wallet) (er
 	}
 
 	subWallet := &SubWallet{
-		CustomerID: customer.Id,
+		CustomerID: customerID,
 		Address:    address,
 		Memo:       address,
 		WalletID:   wallet.Id,
@@ -51,25 +51,41 @@ func CreateCustomerWallet(customerID string, address string, wallet *Wallet) (er
 	return nil
 }
 
+func GetSubWalletByAddress(address string) (subWallet *SubWallet, err error) {
+	db := GetDBClient()
+	subWallet = new(SubWallet)
+	err = db.Model(subWallet).Where("address = ?", address).Select()
+	return subWallet, err
+}
+
 func GetSubWalletByCustomerID(customerID string, coin string) (subWallet *SubWallet, err error) {
 	db := GetDBClient()
-
-	customer := new(Customer)
-	err = db.Model(customer).Where("customer_id = ?", customerID).Select()
-	if err != nil {
-		log.Error("Failed to fetch customer ", err)
-		return nil, err
-	}
 
 	subWallet = new(SubWallet)
 	coinType := CoinTypes[coin]
 	err = db.Model(subWallet).
-		Where("customer_id = ?", customer.Id).
+		Where("customer_id = ?", customerID).
 		Relation("Wallet", func(q *orm.Query) (*orm.Query, error) {
 			return q.Where("coin_type = ?", coinType), nil
 		}).First()
 
 	return subWallet, err
+}
+
+func GetDepositHistoryByCustomerID(customerID string, coin string) (deposit []*DepositCallBack, err error) {
+	nativeCoin := GetNativeCoin(coin)
+	db := GetDBClient()
+
+	subWallet := new(SubWallet)
+	coinType := CoinTypes[nativeCoin]
+	err = db.Model(subWallet).
+		Where("customer_id = ?", customerID).
+		Relation("Wallet", func(q *orm.Query) (*orm.Query, error) {
+			return q.Where("coin_type = ?", coinType), nil
+		}).
+		Relation("DepositCallBack").First()
+
+	return subWallet.DepositCallBack, err
 }
 
 func GetWalletByCustomerID(customerId string, coin string) (wallet *Wallet, err error) {

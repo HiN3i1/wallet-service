@@ -28,6 +28,10 @@ func NewResponse(statusCode int, Msg string, Data interface{}) *APIResponse {
 	}
 }
 
+func NewSuccessResopnse(Data interface{}) *APIResponse {
+	return NewResponse(http.StatusOK, "success", Data)
+}
+
 func NewServerError(msg string) *APIResponse {
 	return NewResponse(http.StatusInternalServerError, msg, "")
 }

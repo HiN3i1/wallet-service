@@ -101,7 +101,7 @@ func CreateDepositWalletAddresses(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, m)
+	c.JSON(http.StatusOK, api.NewSuccessResopnse(m))
 }
 
 func GetDepositWalletAddresses(c *gin.Context) {
@@ -122,5 +122,21 @@ func GetDepositWalletAddresses(c *gin.Context) {
 	m := CreateAddressResp{
 		Addresses: []string{address},
 	}
-	c.JSON(http.StatusOK, m)
+	c.JSON(http.StatusOK, api.NewSuccessResopnse(m))
+}
+
+func GetDepositHistory(c *gin.Context) {
+	customerID := c.Param("customer_id")
+	coin := c.Param("coin")
+	if customerID == "" || coin == "" {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, api.EmptyParam)
+		return
+	}
+
+	history, err := db.GetDepositHistoryByCustomerID(customerID, coin)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, api.NewServerError(err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, api.NewSuccessResopnse(history))
 }

@@ -76,8 +76,6 @@ func Callback(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(string(postBody))
-
 	apiCodeObj, err := db.GetWalletByType(cb.Currency)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, api.NewServerError(err.Error()))
@@ -94,7 +92,7 @@ func Callback(c *gin.Context) {
 		return
 	}
 
-	log.Debug("Callback => %s", postBody)
+	log.Debug("Callback => %s", string(postBody))
 
 	cbType := cybavo.CallbackType(cb.Type)
 	if cbType == cybavo.DepositCallback {

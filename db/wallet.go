@@ -51,24 +51,25 @@ type Wallet struct {
 	WalletID   int64        `pg:",pk,unique" json:"wallet_id"`
 	CoinType   CoinType     `pg:",notnull" json:"coin_type"`
 	WalletType WalletType   `pg:",notnull" json:"wallet_type"`
-	SubWallets *[]SubWallet `pg:"rel:has-many,fk:wallet_id"`
+	SubWallets []*SubWallet `pg:"rel:has-many,fk:wallet_id"`
 }
 
 // Subwallet is user's wallet
 type SubWallet struct {
 	Id              int64
-	CustomerID      int64              `pg:",pk"`
-	Customer        *Customer          `pg:"rel:has-one"`
+	CustomerID      string             `pg:","`
+	Customer        *Customer          `pg:"rel:has-one,fk:customer_id"`
 	Address         string             `pg:"," json:"address"`
 	Memo            string             `pg:"," json:"memo"`
-	WalletID        int64              `pg:",pk"`
-	Wallet          *Wallet            `pg:"rel:has-one"`
-	DepositCallBack *[]DepositCallBack `pg:"rel:has-many,join_fk:to_address"`
+	WalletID        int64              `pg:","`
+	Wallet          *Wallet            `pg:"rel:has-one,fk:wallet_id"`
+	DepositCallBack []*DepositCallBack `pg:"rel:has-many"`
 }
 
 type DepositCallBack struct {
+	Id              int64
 	Type            int                    `json:"type"`
-	UniqueID        string                 `pg:",unique" json:"unique_id"`
+	UniqueID        string                 `pg:",pk,unique" json:"unique_id"`
 	Currency        string                 `json:"currency"`
 	TXID            string                 `json:"txid"`
 	BlockHeight     int64                  `json:"block_height"`
@@ -80,7 +81,8 @@ type DepositCallBack struct {
 	ConfirmBlocks   int64                  `json:"confirm_blocks"`
 	ProcessingState cybavo.ProcessingState `json:"processing_state"`
 	Decimals        int                    `json:"decimal"`
-	SubWallet       *SubWallet             `pg:"rel:has-one,fk:address"`
+	SubWalletID     int64                  `json:"sub_wallet_id"`
+	SubWallet       *SubWallet             `pg:"rel:has-one"`
 }
 
 func SetDepositCallBack(cb *cybavo.CallbackStruct) (err error) {
@@ -88,16 +90,27 @@ func SetDepositCallBack(cb *cybavo.CallbackStruct) (err error) {
 	dcb := new(DepositCallBack)
 	// deposit unique ID
 	uniqueID := fmt.Sprintf("%s_%d", cb.TXID, cb.VOutIndex)
-	err = db.Model(dcb).Where("unique_id = ?", uniqueID).Select()
 	copier.Copy(dcb, cb)
+
+	subWallet, err := GetSubWalletByAddress(cb.ToAddress)
+
 	if err != nil {
+		log.Error("Failed to fetch subWallet ", err)
+		return err
+	}
+
+	dcb.UniqueID = uniqueID
+	dcb.SubWalletID = subWallet.Id
+
+	count, err := db.Model((*DepositCallBack)(nil)).Where("unique_id = ?", uniqueID).Count()
+	if count == 0 {
 		_, err = db.Model(dcb).Insert()
 		if err != nil {
 			log.Error("Failed to insert deposit callback ", err)
 			return err
 		}
 	} else {
-		err = db.Update(dcb)
+		_, err = db.Model(dcb).WherePK().Update()
 		if err != nil {
 			log.Error("Failed to update deposit callback ", err)
 			return err
@@ -110,11 +123,10 @@ func SetWalletAPICode(walletRequest *Wallet, coin string) (err error) {
 	db := GetDBClient()
 	wallet := new(Wallet)
 	err = db.Model(wallet).Where("wallet_id = ?", walletRequest.WalletID).Select()
-	wallet.APICode = walletRequest.APICode
-	wallet.APISecret = walletRequest.APISecret
-	wallet.WalletID = walletRequest.WalletID
-	wallet.WalletType = walletRequest.WalletType
+
+	copier.Copy(wallet, walletRequest)
 	wallet.CoinType = CoinTypes[coin]
+
 	if err != nil {
 		_, err = db.Model(wallet).Insert()
 		if err != nil {
@@ -122,7 +134,7 @@ func SetWalletAPICode(walletRequest *Wallet, coin string) (err error) {
 			return err
 		}
 	} else {
-		err = db.Update(wallet)
+		_, err = db.Model(wallet).WherePK().Update()
 		if err != nil {
 			log.Error("Failed to update API token ", err)
 			return err

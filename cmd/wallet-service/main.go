@@ -23,6 +23,7 @@ var (
 func main() {
 	flag.Parse()
 	godotenv.Load()
+	setLogger()
 	switch *method {
 	case "resetdb":
 		db.CreateDBClient()

@@ -38,6 +38,7 @@ func New() *gin.Engine {
 		{
 			customerGroup.POST("/apitoken/:coin", v1API.SetAPIToken)
 			customerGroup.GET("/:customer_id/:coin", v1API.GetDepositWalletAddresses)
+			customerGroup.GET("/:customer_id/:coin/deposit", v1API.GetDepositHistory)
 			customerGroup.POST("/:customer_id/:coin", v1API.CreateDepositWalletAddresses)
 		}
 	}
