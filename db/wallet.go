@@ -82,6 +82,6 @@ func GetWalletByType(coin string) (wallet *Wallet, err error) {
 	db := GetDBClient()
 	wallet = new(Wallet)
 	coinType := CoinTypes[coin]
-	err = db.Model(wallet).Where("coin_type = ?", coinType).Select()
+	err = db.Model(wallet).Where("coin_type = ?", coinType).First()
 	return wallet, err
 }
