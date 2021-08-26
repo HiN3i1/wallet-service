@@ -51,19 +51,19 @@ type Wallet struct {
 	WalletID   int64        `pg:",pk,unique" json:"wallet_id"`
 	CoinType   CoinType     `pg:",notnull" json:"coin_type"`
 	WalletType WalletType   `pg:",notnull" json:"wallet_type"`
-	SubWallets []*SubWallet `pg:"rel:has-many,fk:wallet_id"`
+	SubWallets []*SubWallet `pg:"rel:has-many,fk:wallet_id" json:"-"`
 }
 
 // Subwallet is user's wallet
 type SubWallet struct {
 	Id              int64
 	CustomerID      string             `pg:","`
-	Customer        *Customer          `pg:"rel:has-one,fk:customer_id"`
+	Customer        *Customer          `pg:"rel:has-one,fk:customer_id" json:"-"`
 	Address         string             `pg:"," json:"address"`
 	Memo            string             `pg:"," json:"memo"`
 	WalletID        int64              `pg:","`
 	Wallet          *Wallet            `pg:"rel:has-one,fk:wallet_id"`
-	DepositCallBack []*DepositCallBack `pg:"rel:has-many"`
+	DepositCallBack []*DepositCallBack `pg:"rel:has-many" json:"-"`
 }
 
 type DepositCallBack struct {
@@ -82,7 +82,7 @@ type DepositCallBack struct {
 	ProcessingState cybavo.ProcessingState `json:"processing_state"`
 	Decimals        int                    `json:"decimal"`
 	SubWalletID     int64                  `json:"sub_wallet_id"`
-	SubWallet       *SubWallet             `pg:"rel:has-one"`
+	SubWallet       *SubWallet             `pg:"rel:has-one" json:"-"`
 }
 
 func SetDepositCallBack(cb *cybavo.CallbackStruct) (err error) {

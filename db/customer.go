@@ -9,7 +9,7 @@ import (
 type Customer struct {
 	Id         int64
 	CustomerID string       `pg:",pk" json:"customer_id"`
-	SubWallets []*SubWallet `pg:"rel:has-many,fk:customer_id"`
+	SubWallets []*SubWallet `pg:"rel:has-many,fk:customer_id" json:"-"`
 }
 
 func CreateCustomer(customerID string) (customer *Customer, err error) {
