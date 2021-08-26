@@ -31,16 +31,19 @@ func Callback(c *gin.Context) {
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, api.NewServerError(err.Error()))
+		return
 	}
 
 	err = json.Unmarshal(postBody, &cb)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, api.NewServerError(err.Error()))
+		return
 	}
 
 	apiCodeObj, err := db.GetWalletById(cb.WalletID)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, api.NewServerError(err.Error()))
+		return
 	}
 
 	checksum := c.Request.Header.Get("X-CHECKSUM")
@@ -50,6 +53,7 @@ func Callback(c *gin.Context) {
 
 	if checksum != checksumVerf {
 		c.AbortWithStatusJSON(http.StatusBadRequest, api.NewServerError("bad checksum"))
+		return
 	}
 
 	logrus.Debug("Callback => %s", postBody)

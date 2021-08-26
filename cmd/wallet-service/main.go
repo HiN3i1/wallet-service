@@ -42,7 +42,7 @@ func runAllService() {
 	service.CreateDBClient()
 
 	log.Println("Starting HTTP API Service...")
-	serverHTTP := service.NewAPIServer(":10445")
+	serverHTTP := service.NewAPIServer(":80")
 
 	go func() {
 		if err := serverHTTP.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -53,7 +53,7 @@ func runAllService() {
 	}()
 
 	log.Println("Starting HTTPS API Service...")
-	serverHTTPs := service.NewAPIServer(":10443")
+	serverHTTPs := service.NewAPIServer(":443")
 
 	go func() {
 		if err := serverHTTPs.ListenAndServeTLS("./certs/server.crt", "./certs/server.key"); err != nil && err != http.ErrServerClosed {
