@@ -128,5 +128,5 @@ func Callback(c *gin.Context) {
 	}
 
 	// reply 200 OK to confirm the callback has been processed
-	c.JSON(http.StatusOK, api.RequestOK)
+	c.JSON(http.StatusOK, "OK")
 }
