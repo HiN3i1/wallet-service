@@ -9,6 +9,7 @@ require (
 	github.com/go-pg/pg v8.0.7+incompatible // indirect
 	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/jinzhu/copier v0.3.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/joho/godotenv v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect

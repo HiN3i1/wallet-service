@@ -41,7 +41,7 @@ func SetAPIToken(c *gin.Context) {
 
 	apiCodeParams := db.Wallet{
 		APICode:    request.APICode,
-		ApiSecret:  request.ApiSecret,
+		APISecret:  request.APISecret,
 		WalletID:   request.WalletID,
 		WalletType: db.Deposit,
 	}
@@ -63,14 +63,23 @@ func CreateDepositWalletAddresses(c *gin.Context) {
 		return
 	}
 
-	wallet, err := db.GetWalletByType(coin)
+	nativeCoin := db.GetNativeCoin(coin)
+	nativeWallet, err := db.GetWalletByType(nativeCoin)
 
-	if wallet == nil || err != nil {
+	if nativeWallet == nil || err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, api.NewServerError(err.Error()))
 		return
 	}
 
-	resp, err := cybavo.MakeRequest(wallet, "POST", fmt.Sprintf("/v1/sofa/wallets/%d/addresses", wallet.WalletID),
+	nativeSubWallet, err := db.GetSubWalletByCustomerID(customerID, nativeCoin)
+
+	if nativeSubWallet != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, api.NewServerError("can't create again"))
+		return
+	}
+
+	// use native api to create address
+	resp, err := cybavo.MakeRequest(nativeWallet.APICode, nativeWallet.APISecret, "POST", fmt.Sprintf("/v1/sofa/wallets/%d/addresses", nativeWallet.WalletID),
 		nil, c.Request.Body)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, api.NewServerError(err.Error()))
@@ -85,7 +94,7 @@ func CreateDepositWalletAddresses(c *gin.Context) {
 		return
 	}
 
-	err = db.CreateCustomerWallet(customerID, m.Addresses[0], wallet)
+	err = db.CreateCustomerWallet(customerID, m.Addresses[0], nativeWallet)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, api.NewServerError(err.Error()))
@@ -103,7 +112,8 @@ func GetDepositWalletAddresses(c *gin.Context) {
 		return
 	}
 
-	address, err := db.GetAddressByCustomerID(customerID, coin)
+	nativeCoin := db.GetNativeCoin(coin)
+	address, err := db.GetAddressByCustomerID(customerID, nativeCoin)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, api.NewServerError(err.Error()))
 		return

@@ -31,6 +31,7 @@ func New() *gin.Engine {
 		walletGroup := APIv1.Group("/wallets")
 		{
 			walletGroup.POST("/:wallet_id", v1API.SetAPIToken)
+			walletGroup.GET("/:wallet_id/activate", v1API.ActivateAPIToken)
 			walletGroup.POST("/callback", v1API.Callback)
 		}
 		customerGroup := APIv1.Group("/customer")

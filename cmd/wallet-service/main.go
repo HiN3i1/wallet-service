@@ -13,6 +13,7 @@ import (
 	"github.com/HiN3i1/wallet-service/db"
 	"github.com/HiN3i1/wallet-service/service"
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -37,6 +38,19 @@ func main() {
 	}
 }
 
+func setLogger() {
+	lvl := os.Getenv("LOG_LEVEL")
+	if lvl == "" {
+		lvl = "debug"
+	}
+	ll, err := logrus.ParseLevel(lvl)
+	if err != nil {
+		ll = logrus.DebugLevel
+	}
+	logrus.SetLevel(ll)
+
+}
+
 func runAllService() {
 	log.Println("Starting DB Service...")
 	service.CreateDBClient()
@@ -56,7 +70,7 @@ func runAllService() {
 	serverHTTPs := service.NewAPIServer(":443")
 
 	go func() {
-		if err := serverHTTPs.ListenAndServeTLS("./certs/server.crt", "./certs/server.key"); err != nil && err != http.ErrServerClosed {
+		if err := serverHTTPs.ListenAndServeTLS("./certs/server.pem", "./certs/server.key"); err != nil && err != http.ErrServerClosed {
 			e := fmt.Errorf("listen https failed. err=[%v]", err)
 			fmt.Println(e)
 			return

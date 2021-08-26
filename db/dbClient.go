@@ -53,6 +53,7 @@ func CleanTable() error {
 		(*Wallet)(nil),
 		(*Customer)(nil),
 		(*SubWallet)(nil),
+		(*DepositCallBack)(nil),
 	} {
 		if err := DB.DropTable(model, &orm.DropTableOptions{
 			IfExists: true,
@@ -70,6 +71,7 @@ func InitTable() error {
 		(*Wallet)(nil),
 		(*Customer)(nil),
 		(*SubWallet)(nil),
+		(*DepositCallBack)(nil),
 	} {
 		if err := DB.CreateTable(model, &orm.CreateTableOptions{
 			IfNotExists:   true,

@@ -36,7 +36,7 @@ func (m *ErrorCodeResponse) String() string {
 
 type SetAPICodeRequest struct {
 	APICode   string `json:"api_code"`
-	ApiSecret string `json:"api_secret"`
+	APISecret string `json:"api_secret"`
 	WalletID  int64  `json:"wallet_id"`
 }
 

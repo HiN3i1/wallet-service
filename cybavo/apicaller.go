@@ -23,9 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HiN3i1/wallet-service/db"
-
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var baseURL = "https://sofatest.sandbox.cybavo.com"
@@ -38,7 +36,7 @@ func buildChecksum(params []string, secret string, time int64, r string) string 
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(strings.Join(params, "&"))))
 }
 
-func MakeRequest(wallet *db.Wallet, method string, api string, params []string, ginBody io.ReadCloser) ([]byte, error) {
+func MakeRequest(apiCode string, apiSecret string, method string, api string, params []string, ginBody io.ReadCloser) ([]byte, error) {
 
 	var err error
 
@@ -48,7 +46,7 @@ func MakeRequest(wallet *db.Wallet, method string, api string, params []string, 
 		return nil, errors.New("invalid parameters")
 	}
 
-	if wallet == nil || method == "" || api == "" {
+	if method == "" || api == "" {
 		return nil, errors.New("invalid parameters")
 	}
 
@@ -74,13 +72,13 @@ func MakeRequest(wallet *db.Wallet, method string, api string, params []string, 
 		return nil, err
 	}
 
-	req.Header.Set("X-API-CODE", wallet.APICode)
-	req.Header.Set("X-CHECKSUM", buildChecksum(params, wallet.ApiSecret, t, r))
+	req.Header.Set("X-API-CODE", apiCode)
+	req.Header.Set("X-CHECKSUM", buildChecksum(params, apiSecret, t, r))
 	if postBody != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	logrus.Debug("Request URL:", url)
-	logrus.Debug("\tX-CHECKSUM:\t", req.Header.Get("X-CHECKSUM"))
+	log.Debug("Request URL:", url)
+	log.Debug("\tX-CHECKSUM:\t", req.Header.Get("X-CHECKSUM"))
 
 	res, err := client.Do(req)
 	if err != nil {
